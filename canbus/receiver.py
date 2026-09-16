@@ -17,9 +17,10 @@ class CanReceiver:
                 if msg is None:
                     continue
 
-                rpm = obd.parse_obd_response(msg)
-                if rpm is not None:
-                    self._vehicle_service.set_vehicle_rpm(rpm)
+                reading = obd.parse_obd_response(msg)
+
+                if reading is not None and reading.name == 'rpm':
+                    self._vehicle_service.set_vehicle_rpm(reading.value)
 
             except can.CanError as e:
                 print(f"CAN error: {e}")

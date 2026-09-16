@@ -15,7 +15,7 @@ class CanRequestor:
     def __init__(self, bus):
         self._bus = bus
 
-    def request_pid(pid):
+    def request_pid(self, pid):
         data = bytes([
             0x02, # length
             0x01, # mode 01
@@ -34,5 +34,5 @@ class CanRequestor:
     def run(self, stop_signal: Event):
         while not stop_signal.is_set():
             for name, pid in PIDS.items():
-                request_pid(pid)
+                self.request_pid(pid)
             stop_signal.wait(0.1)

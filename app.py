@@ -34,7 +34,7 @@ class Application:
         )
 
         requestor_thread = Thread(
-            target=self._receiver.run,
+            target=self._requestor.run,
             args=(self._stop,),
             name="can_requestor"
         )

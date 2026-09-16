@@ -1,7 +1,7 @@
 import can
 from dataclasses import dataclass
 from typing import Optional
-
+from .obd_reading import ObdReading
 
 @dataclass
 class ObdResponse:
@@ -10,7 +10,7 @@ class ObdResponse:
     pid: int
     payload: bytes
 
-def parse_obd_response(msg: can.Message) -> Optional[ObdResponse]:
+def parse_obd_response(msg: can.Message) -> Optional[ObdReading]:
     if not (0x7E8 <= msg.arbitration_id <= 0x7EF):
         return None
 
@@ -48,24 +48,23 @@ def decode_pid(pid: int, data: bytes):
 
                 a, b = data[0], data[1]
                 rpm = ((a << 8) | b) / 4
-                return rpm
+                return ObdReading(pid, 'rpm', rpm)
 
             case 0x0D: #Speed
                 if len(data) < 1:
                     return None
-
-                print(f"Speed {data[0]}")
+                return ObdReading(pid, 'speed', data[0])
 
             case 0x05: #Coolant temp
                 if len(data) < 1:
                     return None
                 
                 coolant_temp = data[0] - 40
-                print(f"Coolant temp: {coolant_temp}")
+                return ObdReading(pid, 'coolant_temp', coolant_temp)
 
             case 0x11: #Throttle position:
                 if len(data) < 1:
                     return None
                 
                 throttle_position = data[0] * 100 / 255
-                print(f"Throttle position: {throttle_position}")
+                return ObdReading(pid, 'throttle_position', throttle_position)
