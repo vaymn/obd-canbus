@@ -1,8 +1,8 @@
 ## CAN
 
 sudo modprobe can
-sudo modeprobe slcan
-sudo modeprode can_raw
+sudo modprobe slcan
+sudo modprode can_raw
 
 sudo slcand -l -c -s6 /dev/ttyACM0 can0
 
@@ -12,7 +12,7 @@ candump can0
 
 ## VCAN
 
-sudo modeprode vcan
+sudo modprode vcan
 sudo ip link add dev vcan0 type vcan
 sudo ip link set vcan0 up
 
