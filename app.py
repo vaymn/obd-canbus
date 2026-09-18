@@ -1,15 +1,16 @@
 import can
+import argparse
 import signal
 from threading import Event, Thread
 from canbus import receiver, requestor
 from vehicle.vehicle_service import VehicleService
 from ui.terminal import TerminalUi
 
-interface = "socketcan"
-channel = "vcan0"
+DEFAULT_INTERFACE = "socketcan"
+DEFAULT_CHANNEL = "vcan0"
 
 class Application:
-    def __init__(self):
+    def __init__(self, interface=DEFAULT_INTERFACE, channel=DEFAULT_CHANNEL):
         self._bus = can.Bus(
             channel=channel,
             interface=interface
@@ -75,5 +76,27 @@ class Application:
             self._bus.shutdown()
             print("Application arrêtée.")
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Interroge un véhicule via CAN/OBD-II."
+    )
+    parser.add_argument(
+        "--interface",
+        default=DEFAULT_INTERFACE,
+        help=f"Interface python-can à utiliser (défaut : {DEFAULT_INTERFACE})"
+    )
+    parser.add_argument(
+        "--channel",
+        default=DEFAULT_CHANNEL,
+        help=f"Canal CAN à utiliser (défaut : {DEFAULT_CHANNEL})"
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    Application().run()
+    args = parse_args()
+    Application(
+        interface=args.interface,
+        channel=args.channel
+    ).run()
