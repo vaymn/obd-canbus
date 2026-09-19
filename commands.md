@@ -4,7 +4,9 @@ sudo modprobe can
 sudo modprobe slcan
 sudo modprode can_raw
 
-sudo slcand -l -c -s6 /dev/ttyACM0 can0
+sudo slcand -o -c -s6 /dev/ttyACM0 can0
+### ou
+sudo slcand -l -c -s6 /dev/ttyACM0 can0 # listen-only
 
 sudo ip link set can0 up
 
