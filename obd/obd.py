@@ -41,30 +41,47 @@ def parse_obd_response(msg: can.Message) -> Optional[ObdReading]:
     return decode_pid(obd_response.pid, obd_response.payload)
 
 def decode_pid(pid: int, data: bytes):
-        match pid:
-            case 0x0C: #RPM
-                if len(data) < 2:
-                    return None
+    match pid:
+        case 0x04:  # Calculated engine load
+            return _one_byte(pid, data, "engine_load", lambda value: value * 100 / 255)
+        case 0x05:  # Coolant temperature
+            return _one_byte(pid, data, "coolant_temp", lambda value: value - 40)
+        case 0x0C:  # Engine RPM
+            return _two_bytes(pid, data, "rpm", lambda value: value / 4)
+        case 0x0D:  # Vehicle speed
+            return _one_byte(pid, data, "speed", float)
+        case 0x0E:  # Ignition timing advance
+            return _one_byte(pid, data, "ignition_timing", lambda value: value / 2 - 64)
+        case 0x0F:  # Intake air temperature
+            return _one_byte(pid, data, "intake_temp", lambda value: value - 40)
+        case 0x10:  # Mass air flow
+            return _two_bytes(pid, data, "maf", lambda value: value / 100)
+        case 0x11:  # Throttle position
+            return _one_byte(pid, data, "throttle_position", lambda value: value * 100 / 255)
+        case 0x1F:  # Engine run time
+            return _two_bytes(pid, data, "engine_runtime", float)
+        case 0x2F:  # Fuel tank level
+            return _one_byte(pid, data, "fuel_level", lambda value: value * 100 / 255)
+        case 0x42:  # Control module voltage
+            return _two_bytes(pid, data, "control_voltage", lambda value: value / 1000)
+        case 0x46:  # Ambient air temperature
+            return _one_byte(pid, data, "ambient_temp", lambda value: value - 40)
+        case 0x5C:  # Engine oil temperature
+            return _one_byte(pid, data, "oil_temp", lambda value: value - 40)
+        case 0x5E:  # Engine fuel rate
+            return _two_bytes(pid, data, "fuel_rate", lambda value: value / 20)
 
-                a, b = data[0], data[1]
-                rpm = ((a << 8) | b) / 4
-                return ObdReading(pid, 'rpm', rpm)
+    return None
 
-            case 0x0D: #Speed
-                if len(data) < 1:
-                    return None
-                return ObdReading(pid, 'speed', data[0])
 
-            case 0x05: #Coolant temp
-                if len(data) < 1:
-                    return None
-                
-                coolant_temp = data[0] - 40
-                return ObdReading(pid, 'coolant_temp', coolant_temp)
+def _one_byte(pid: int, data: bytes, name: str, decoder) -> Optional[ObdReading]:
+    if len(data) < 1:
+        return None
+    return ObdReading(pid, name, decoder(data[0]))
 
-            case 0x11: #Throttle position:
-                if len(data) < 1:
-                    return None
-                
-                throttle_position = data[0] * 100 / 255
-                return ObdReading(pid, 'throttle_position', throttle_position)
+
+def _two_bytes(pid: int, data: bytes, name: str, decoder) -> Optional[ObdReading]:
+    if len(data) < 2:
+        return None
+    raw_value = (data[0] << 8) | data[1]
+    return ObdReading(pid, name, decoder(raw_value))

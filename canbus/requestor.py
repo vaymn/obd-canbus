@@ -1,14 +1,7 @@
 import can
 import time
 from threading import Event
-
-PIDS = {
-    "rpm": 0x0C,
-    "speed": 0x0D,
-    "coolant": 0x05,
-    "throttle": 0x11,
-    "voltage": 0x42,
-}
+from obd.pids import PID_DEFINITIONS
 
 class CanRequestor:
 
@@ -32,7 +25,18 @@ class CanRequestor:
         self._bus.send(message)
 
     def run(self, stop_signal: Event):
+        next_request = {definition.pid: 0.0 for definition in PID_DEFINITIONS}
+
         while not stop_signal.is_set():
-            for name, pid in PIDS.items():
-                self.request_pid(pid)
-            stop_signal.wait(0.1)
+            now = time.monotonic()
+
+            for definition in PID_DEFINITIONS:
+                if now >= next_request[definition.pid]:
+                    try:
+                        self.request_pid(definition.pid)
+                    except can.CanError as error:
+                        print(f"CAN error lors de l'envoi du PID 0x{definition.pid:02X}: {error}")
+                    next_request[definition.pid] = now + definition.interval
+
+            next_due = min(next_request.values())
+            stop_signal.wait(max(0.01, min(0.10, next_due - time.monotonic())))

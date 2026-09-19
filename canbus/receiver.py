@@ -19,10 +19,10 @@ class CanReceiver:
 
                 reading = obd.parse_obd_response(msg)
 
-                if reading is not None and reading.name == 'rpm':
-                    self._vehicle_service.set_vehicle_rpm(reading.value)
+                if reading is not None:
+                    self._vehicle_service.update_reading(reading)
 
             except can.CanError as e:
                 print(f"CAN error: {e}")
             
-            stop_signal.wait(0.1) #10Hz
+            stop_signal.wait(0.001) #1000Hz

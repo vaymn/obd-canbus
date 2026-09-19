@@ -17,6 +17,7 @@ class Application:
         )
 
         self._vehicle_service = VehicleService()
+        self._stop = Event()
 
         self._receiver = receiver.CanReceiver(
             self._bus,
@@ -26,7 +27,6 @@ class Application:
 
         self._ui = TerminalUi(self._vehicle_service)
 
-        self._stop = Event()
         self._threads = []
 
     def stop(self, signum=None, frame=None):
@@ -75,7 +75,6 @@ class Application:
 
             self._bus.shutdown()
             print("Application arrêtée.")
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
